@@ -1,7 +1,16 @@
 # DC_Monitor_UNO
 
-Данный прибор контролирует параметры температуры, влажности и наличие напряжения в сети переменного тока. Все параметры заносятся в журнал с указанием даты и времени каждые 4 секунды
+Данный прибор на базе Arduino Uno wifi контролирует параметры температуры, влажности и наличие напряжения в сети переменного тока. Все параметры заносятся в журнал с указанием даты и времени каждые 4 секунды
 
+## Датчики и приборы:
+- Arduino UNO R3 + WiFi ATmega328P + ESP8266 https://aliexpress.ru/item/1005005918386368.html?spm=a2g2w.orderdetail.0.0.67504aa6pkihR5&sku_id=12000034848567308
+- Источник питания 220/5В https://aliexpress.ru/item/1005006060171604.html?spm=a2g2w.orderdetail.0.0.aaee4aa6rtuntF&sku_id=12000035548325599
+- Импульсный источник бесперебойного питания https://aliexpress.ru/item/1005002982442200.html?spm=a2g2w.orderdetail.0.0.2dce4aa6mQpzua&sku_id=12000027774110131
+- ZMPT101B https://aliexpress.ru/item/4000908383725.html?spm=a2g2w.orderdetail.0.0.b8214aa6vTbB62&sku_id=10000010494015900
+- Модуль мини-карты TF D1, MicroSD https://aliexpress.ru/item/1005004384727345.html?spm=a2g2w.orderdetail.0.0.96c84aa6RjUNNx&sku_id=12000028990652050
+- DHT22 цифровой датчик температуры и влажности AM2302 https://aliexpress.ru/item/33037061522.html?spm=a2g2w.orderdetail.0.0.475b4aa6RRmOYf&sku_id=12000032670222588
+- LCD1602 I2C https://aliexpress.ru/item/1967124495.html?spm=a2g2w.orderdetail.0.0.25064aa6uLT1O2&sku_id=10000000241981656
+-  RTC I2C 24C32 https://aliexpress.ru/item/1005005642497175.html?spm=a2g2w.orderdetail.0.0.4f3b4aa6YM7nCB&sku_id=12000033856705413
 
 ## Versions:
 ### v. 0.9
@@ -19,3 +28,4 @@
 - сброс ошибок кнопкой;
 - запись на карту памяти параметров каждый час если нет сбоев, чтобы уменьшить размер лога;
 - сохранять наличие ошибки в EEPROM для защиты от потери данных;
+- при пропадении напряжения сохранить ошибку, контролировать появление wifi подключения, при появлении соединения отправить email об ошибке;
