@@ -8,6 +8,5 @@ Time
 DHT22
 DHT sensor library
 SdFat
-Filters
 ZMPT101B
-LCD_I2C
+Grove 4-Digit Display
