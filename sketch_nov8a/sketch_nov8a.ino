@@ -13,6 +13,16 @@ const char* host1 = "flask-bot-xabor.amvera.io";
 const char* host = "api.thingspeak.com";
 const char* APIkey   = "H20C8OAJ7KXGE3SS";  // Введите API key thingspeak
 
+int count = 0;
+
+// Generally, you should use "unsigned long" for variables that hold time
+// The value will quickly become too large for an int to store
+unsigned long previousMillis = 0;        // will store last time LED was updated
+
+// constants won't change :
+const long interval = 600000;           // Интервал отправки данных если напряжеине есть и все ОК
+
+
 
 // The SSL Fingerprint of https://www.unwiredlabs.com
 // Certificate expires 
@@ -70,6 +80,10 @@ void setup()
 void loop() 
 {
   voltage = voltageSensor.getRmsVoltage();
+
+  if (voltage < 10) {
+    voltage = 0;
+  }
 //.........................DHT.......................................
   h = dht.readHumidity();
   t = dht.readTemperature();
@@ -137,34 +151,92 @@ void loop()
   //             "Host: " + host + "\r\n" +
   //             "Connection: close\r\n\r\n");  
                                        // Чтение данных от сервера и отправка в последовательный порт
+  Serial.print(count);
+  if (voltage == 0 && count < 3) {
+    client.println(String("GET ") + url1 + " HTTP/1.1\r\n" +
+                 "Host: " + host1 + "\r\n" + 
+                 "Connection: close\r\n\r\n");
+    count = count +1;
+
+    while (client.available()) 
+    {
+      String line = client.readStringUntil('\r');
+      Serial.print(line);
+    }
+    Serial.println();
+
+    delay(500);
+    client.flush();     // ждем отправки всех данных
+
+    Serial.println("closing connection");
+
+
+    client.stop();
+
+  }
+
+  else if (voltage > 20 && count > 0) {
+    count = 0;
+  }
+
+
+  else {
+    unsigned long currentMillis = millis();
+    if (currentMillis - previousMillis >= interval) {
+    // save the last time you blinked the LED
+      previousMillis = currentMillis;
+      client.println(String("GET ") + url1 + " HTTP/1.1\r\n" +
+                   "Host: " + host1 + "\r\n" + 
+                   "Connection: close\r\n\r\n");
+      while (client.available()) 
+      {
+        String line = client.readStringUntil('\r');
+        Serial.print(line);
+      }
+      Serial.println();
+
+      delay(500);
+      client.flush();     // ждем отправки всех данных
+
+      Serial.println("closing connection");
+
+
+      client.stop();
+
+    }
+    
+  }
+
+  delay(300);
 
 
 
-  client.println(String("GET ") + url1 + " HTTP/1.1\r\n" +
-               "Host: " + host1 + "\r\n" + 
-               "Connection: close\r\n\r\n");
-  Serial.println(String("GET ") + url1 + " HTTP/1.1\r\n" +
-               "Host: " + host1 + "\r\n" + 
-               "Connection: close\r\n\r\n");
+
+//  client.println(String("GET ") + url1 + " HTTP/1.1\r\n" +
+//               "Host: " + host1 + "\r\n" + 
+//               "Connection: close\r\n\r\n");
+  //Serial.println(String("GET ") + url1 + " HTTP/1.1\r\n" +
+  //             "Host: " + host1 + "\r\n" + 
+  //             "Connection: close\r\n\r\n");
                    
-  while (client.available()) 
-  {
-    String line = client.readStringUntil('\r');
-    Serial.print(line);
-  }
-  Serial.println();
+//  while (client.available()) 
+//  {
+//    String line = client.readStringUntil('\r');
+//    Serial.print(line);
+//  }
+//  Serial.println();
 
-  delay(500);
-  client.flush();     // ждем отправки всех данных
+//  delay(500);
+//  client.flush();     // ждем отправки всех данных
 
-  Serial.println("closing connection");
+//  Serial.println("closing connection");
 
 
-  client.stop();
+//  client.stop();
 
-  Serial.println("Waiting");
-  for(unsigned int i = 0; i < 20; i++)  // задержка между обновлениями.
-  {
-    delay(1500);                         
-  }
+//  Serial.println("Waiting");
+//  for(unsigned int i = 0; i < 20; i++)  // задержка между обновлениями.
+//  {
+//    delay(1500);                         
+//  }
 }
