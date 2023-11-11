@@ -3,9 +3,15 @@
 #include <ESP8266HTTPClient.h>
 #include <WiFiClientSecure.h>
 
+#include <user_interface.h>
+void system_restart(void);
+
 //....................... Параметры WIFI ............................
 const char* ssid = "MGTS_GPON_923A";        // Введите имя WIFI сети
 const char* password = "5Y3KX67Q";          // Введите пароль WIFI сети
+
+char* ssid1[] = {"MGTS_GPON_923A","buh","POCOX3Pro"}; //list a necessary wifi networks
+char* pass1[] = {"5Y3KX67Q","triton273","a1b2c3d4e5f6"}; //list a passwords
 
 //...................... Параметры сервиса ThingsPeak ...............
 const char* host1 = "flask-bot-xabor.amvera.io";
@@ -15,6 +21,8 @@ const char* APIkey   = "H20C8OAJ7KXGE3SS";  // Введите API key thingspeak
 
 int count = 0;
 
+int count_for_restart = 0;
+
 // Generally, you should use "unsigned long" for variables that hold time
 // The value will quickly become too large for an int to store
 unsigned long previousMillis = 0;        // will store last time LED was updated
@@ -22,10 +30,6 @@ unsigned long previousMillis = 0;        // will store last time LED was updated
 // constants won't change :
 const long interval = 600000;           // Интервал отправки данных если напряжеине есть и все ОК
 
-
-
-// The SSL Fingerprint of https://www.unwiredlabs.com
-// Certificate expires 
 
 //...................... Датчик DHT22 (DHT11) .......................
 #include <DHT.h>
@@ -43,8 +47,6 @@ ZMPT101B voltageSensor(A0, 50.0);
 //.....................................................................
 float t;
 int h, voltage;
-
-
 
 //===============================================================
 void setup() 
@@ -79,6 +81,21 @@ void setup()
 //================================================================
 void loop() 
 {
+// Если к Wi-Fi подключиться не удалось, то запускается функция перебора известных вайфай сетей
+  if (WiFi.status() != WL_CONNECTED) {
+    MultiWiFiBegin(); //(auth, ssid, pass);
+//    WiFi.begin(ssid, password);
+//    delay(5000);
+//    Serial.print(".");
+//    count_for_restart += 1;
+//    if (count_for_restart >= 40) {
+//      count_for_restart = 0;
+//      system_restart();
+//      delay(2000);
+//    }
+    
+  }
+
   voltage = voltageSensor.getRmsVoltage();
 
   if (voltage < 10) {
@@ -141,16 +158,10 @@ void loop()
          url1 += h;                     //DHT Влажность 
          url1 += "&field3=";
          url1 += voltage;     
-//         url1 += "\r\n\r\n";
+
 
   Serial.println("Sending data: ");
-  //Serial.println(url);
 
-                                       // Передача запроса серверу Thingspeak
-  //client.print(String("GET ") + url + " HTTP/1.1\r\n" +
-  //             "Host: " + host + "\r\n" +
-  //             "Connection: close\r\n\r\n");  
-                                       // Чтение данных от сервера и отправка в последовательный порт
   Serial.print(count);
   if (voltage == 0 && count < 3) {
     client.println(String("GET ") + url1 + " HTTP/1.1\r\n" +
@@ -178,7 +189,6 @@ void loop()
   else if (voltage > 20 && count > 0) {
     count = 0;
   }
-
 
   else {
     unsigned long currentMillis = millis();
@@ -209,34 +219,31 @@ void loop()
 
   delay(300);
 
+}
 
+//.........................several wifi.......................................
 
-
-//  client.println(String("GET ") + url1 + " HTTP/1.1\r\n" +
-//               "Host: " + host1 + "\r\n" + 
-//               "Connection: close\r\n\r\n");
-  //Serial.println(String("GET ") + url1 + " HTTP/1.1\r\n" +
-  //             "Host: " + host1 + "\r\n" + 
-  //             "Connection: close\r\n\r\n");
-                   
-//  while (client.available()) 
-//  {
-//    String line = client.readStringUntil('\r');
-//    Serial.print(line);
-//  }
-//  Serial.println();
-
-//  delay(500);
-//  client.flush();     // ждем отправки всех данных
-
-//  Serial.println("closing connection");
-
-
-//  client.stop();
-
-//  Serial.println("Waiting");
-//  for(unsigned int i = 0; i < 20; i++)  // задержка между обновлениями.
-//  {
-//    delay(1500);                         
-//  }
+void MultiWiFiBegin() {
+  int ssid_count=0;
+  int ssid_mas_size = sizeof(ssid1) / sizeof(ssid1[0]);
+  do {
+    Serial.println("Trying to connect to wi-fi " + String(ssid[ssid_count]));
+    WiFi.begin(ssid1[ssid_count], pass1[ssid_count]);   
+    int WiFi_timeout_count=0;
+    while (WiFi.status() != WL_CONNECTED && WiFi_timeout_count<50) { //waiting 10 sec
+      delay(200);
+      Serial.print(".");
+      ++WiFi_timeout_count;
+    }
+    if (WiFi.status() == WL_CONNECTED) {
+      Serial.println("Connected to WiFi! Now I will check the connection to the Blynk server");
+//      Blynk.config(auth);
+//      Blynk.connect(5000); //waiting 5 sec
+    }
+    ++ssid_count;
+  }
+  while (ssid_count<ssid_mas_size);
+  if (ssid_count==ssid_mas_size) {
+    Serial.println("I could not connect =( Ignore and move on. but still I will try to connect to wi-fi " + String(ssid[ssid_count-1]));
+  }
 }
